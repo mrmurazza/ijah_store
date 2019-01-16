@@ -4,6 +4,7 @@ import (
 	"time"
 	"fmt"
 	"app/util"
+	"strings"
 )
 
 type Item struct {
@@ -52,5 +53,28 @@ func GetItem(sku string) Item {
 		Name: name,
 		Stock: stock,
 	}
+}
+
+func GetItems(skus []string) []Item {
+	query := "SELECT sku, name, stock FROM items where sku in (?" + strings.Repeat(",?", len(skus)-1) + ")"
+	rows, _ := util.Database.Query(query, skus)
+	var (
+		sku, name string
+		stock int
+		items []Item
+	)
+	for rows.Next() {
+		rows.Scan(&sku)
+		rows.Scan(&name)
+		rows.Scan(&stock)
+		items = append(items, Item{
+			SKU: sku,
+			Name: name,
+			Stock: stock,
+		})
+	}
+	defer rows.Close()
+
+	return items
 }
 
