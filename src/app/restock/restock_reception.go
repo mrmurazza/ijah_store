@@ -19,11 +19,12 @@ func (order RestockReception) Persist() {
 }
 
 func CountReceivedStock(restockOrderId int) int {
-	rows, _ := util.Database.Query("SELECT sum(quantity) FROM restock_receptions where restock_order_id = ?", restockOrderId)
+	row := util.Database.QueryRow("SELECT sum(quantity) FROM restock_receptions where restock_order_id = ? group by restock_order_id", restockOrderId)
 	var totalQuantity int
-	rows.Next()
-	rows.Scan(&totalQuantity)
-	defer rows.Close()
+	err := row.Scan(&totalQuantity)
+	if err != nil {
+		println("Exec err:", err.Error())
+	}
 
 	return totalQuantity
 }

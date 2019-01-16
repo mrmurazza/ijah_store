@@ -6,8 +6,6 @@ import (
 	"app"
 )
 
-
-
 func main() {
 	r := gin.Default()
 
