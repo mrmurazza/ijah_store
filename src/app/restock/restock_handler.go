@@ -4,6 +4,7 @@ import (
 	"app/request"
 	"time"
 	"app/item"
+	"app/response"
 )
 
 func validateRestockReq(req request.RestockOrderRequest) string {
@@ -85,4 +86,48 @@ func HandleStatusUpdate(request request.RestockReceiptRequest, existingQuantity 
 		order.Status = "finish"
 		order.UpdateStatus()
 	}
+}
+
+func getReceiptMapAndTotalReceived(receptions []RestockReception) (map[int][]response.ReceiptDetail, map[int]int) {
+	receiptDetailMap := make(map[int][]response.ReceiptDetail)
+	receivedTotalMap := make(map[int]int)
+	for _,reception := range receptions {
+		list := receiptDetailMap[reception.RestockOrderId]
+		list = append(list, response.ReceiptDetail{
+			ReceivedAt: reception.DateReceived.Format(time.RFC850),
+			Quantity: reception.Quantity,
+		})
+		total := receivedTotalMap[reception.RestockOrderId]
+		total += reception.Quantity
+	}
+
+	return receiptDetailMap, receivedTotalMap
+}
+
+func GetAllRestockLog() []response.RestockOrderResponse {
+	orders := GetAllOrders()
+	receptions := GetAllReceptions()
+
+	receiptDetailMap, receivedStockMap := getReceiptMapAndTotalReceived(receptions)
+	requestedSkuList := make([]string, len(orders))
+	for i, order := range orders {
+		requestedSkuList[i] = order.SKU
+	}
+	itemMap := item.GetRequestedItemMap(requestedSkuList)
+
+	var responses []response.RestockOrderResponse
+	for _, order := range orders {
+		responses = append(responses, response.RestockOrderResponse{
+			SKU:           order.SKU,
+			ItemName:      itemMap[order.SKU].Name,
+			InvoiceId:     order.InvoiceId,
+			Price:         order.Price,
+			Quantity:      order.Quantity,
+			TotalPrice:    order.Price * int32(order.Quantity),
+			ReceivedQuantityTotal: receivedStockMap[order.Id],
+			ReceiptDetail: receiptDetailMap[order.Id],
+		})
+	}
+
+	return responses
 }
