@@ -2,15 +2,16 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"app/model"
+	"app/util"
 	"app"
 )
+
 
 
 func main() {
 	r := gin.Default()
 
-	model.InitDatabase()
+	util.InitDatabase()
 
 	api := r.Group("/api/v1")
 	{
