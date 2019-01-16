@@ -88,3 +88,27 @@ func GetItems(skuList []string) []Item {
 	return items
 }
 
+func GetAllItems() []Item {
+	query := "SELECT sku, name, stock FROM items"
+	// converting list of string to args
+	rows, err := util.Database.Query(query)
+	defer rows.Close()
+
+	if err != nil {
+		println("Exec err:", err.Error())
+	}
+
+	var items []Item
+	for rows.Next() {
+		item := Item{}
+
+		err = rows.Scan(&item.SKU, &item.Name, &item.Stock)
+		if err != nil {
+			println("Exec err:", err.Error())
+		}
+
+		items = append(items, item)
+	}
+	return items
+}
+

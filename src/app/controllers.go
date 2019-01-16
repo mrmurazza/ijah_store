@@ -88,6 +88,9 @@ func CreatePurchaseOrder(c *gin.Context) {
 }
 
 func GetStockInfo(c *gin.Context) {
+	items := item.GetAllItems()
+
+	c.JSON(http.StatusOK, items)
 }
 func GetRestockOrderLog(c *gin.Context) {
 }
