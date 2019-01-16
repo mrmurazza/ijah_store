@@ -17,12 +17,16 @@ type (
 		Quantity int `json:"quantity"`
 	}
 
-	PurchaseOrderRequest struct {
-		OrderId string `json:"orderId"`
+	ItemDetail struct {
 		SKU string `json:"sku"`
 		ItemName string `json:"itemName"`
 		Quantity int `json:"quantity"`
 		Price int32 `json:"price"`
+	}
+
+	PurchaseOrderRequest struct {
+		OrderId string `json:"orderId"`
+		Items []ItemDetail `json:"items"`
 		Notes string `json:"notes"`
 	}
 )
