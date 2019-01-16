@@ -74,56 +74,15 @@ func CreatePurchaseOrder(c *gin.Context) {
 		return
 	}
 
-	// prep requested items data
-	requestedSkuList := make([]string, len(req.Items))
-	for i, itemDetail := range req.Items {
-		requestedSkuList[i] = itemDetail.SKU
+	itemMap := item.GetRequestedItemMap(req.Items)
+	errorMsg := purchase.CheckAvailability(req.Items, itemMap)
+
+	if errorMsg != "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": errorMsg})
+		return
 	}
 
-	// get requested item data and more prep
-	var itemMap = make(map[string]item.Item)
-	items := item.GetItems(requestedSkuList[:])
-	for _, product := range items {
-		itemMap[product.SKU] = product
-	}
-
-	// check availability
-	var errorMsg string
-	for _, itemDetail := range req.Items {
-		product := itemMap[itemDetail.SKU]
-
-		switch {
-		case product.SKU == "":
-			errorMsg = "produk dengan SKU " + itemDetail.SKU + " tidak ditemukan"
-		case product.Stock < itemDetail.Quantity:
-			errorMsg = "produk dengan SKU " + product.SKU + " tidak memiliki stok yang cukup"
-		default:
-			errorMsg = ""
-		}
-
-		if errorMsg != "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": errorMsg})
-			return
-		}
-	}
-
-
-	// save purchase order and reduce stock
-	for _, itemDetail := range req.Items {
-		product := itemMap[itemDetail.SKU]
-		purchaseOrder := purchase.PurchaseOrder{
-			OrderId: req.OrderId,
-			SKU: product.SKU,
-			Quantity: itemDetail.Quantity,
-			ItemName: product.Name,
-			Price: itemDetail.Price,
-			Notes: req.Notes,
-		}
-		purchaseOrder.Persist()
-
-		product.Stock -= itemDetail.Quantity
-		product.UpdateStock()
-	}
+	purchase.HandlePurchase(req, itemMap)
 
 	c.JSON(http.StatusOK, gin.H{"message" : "sukses"})
 }
