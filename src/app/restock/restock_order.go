@@ -28,6 +28,8 @@ func (order RestockOrder) Persist() int {
 		if err != nil {
 			println("Error:", err.Error())
 		}
+
+		order.Id = int(id)
 		return int(id)
 	}
 	return -1

@@ -30,12 +30,10 @@ func CreateRestockOrder(c *gin.Context) {
 		return
 	}
 
-	restockOrderId := restockOrder.Persist()
+	restockOrder.Persist()
 	item.CreateItemIfNotAny(request)
+	restock.SaveRestockReception(restockOrder, dateReceived, request.QuantityReceived)
 
-	if request.QuantityReceived > 0 && request.Quantity != request.QuantityReceived {
-		restock.SaveRestockReception(restockOrderId, dateReceived, request.QuantityReceived)
-	}
 	c.JSON(http.StatusOK, gin.H{"message" : "sukses"})
 }
 
@@ -62,9 +60,8 @@ func ReceiveRestock(c *gin.Context) {
 		return
 	}
 
-	restock.SaveRestockReception(restockOrder.Id, dateReceived, request.Quantity)
+	restock.SaveRestockReception(restockOrder, dateReceived, request.Quantity)
 	restock.HandleStatusUpdate(request, totalReceivedQuantity, restockOrder)
-	item.UpdateItemStock(restockOrder.SKU, request.Quantity)
 
 	c.JSON(http.StatusOK, gin.H{"message" : "sukses"})
 }
