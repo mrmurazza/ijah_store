@@ -1,30 +1,32 @@
 package request
 
-import "time"
+import (
+	"time"
+)
 
 type (
 	RestockOrderRequest struct {
-		sku string
-		itemName string
-		invoiceId string
-		price int32
-		quantity int
-		dateReceived time.Time
-		quantityReceived int
+		SKU string `json:"sku"`
+		ItemName string `json:"itemName"`
+		InvoiceId string `json:"invoiceId"`
+		Price int32 `json:"price"`
+		Quantity int `json:"quantity"`
+		DateReceived time.Time `json:"dateReceived"`
+		QuantityReceived int `json:"quantityReceived"`
 	}
 
 	RestockReceiptRequest struct {
-		invoiceId string
-		dateReceived time.Time
-		quantity int
+		InvoiceId string `json:"invoiceId"`
+		DateReceived time.Time `json:"dateReceived"`
+		Quantity int `json:"quantity"`
 	}
 
 	PurchaseOrderRequest struct {
-		orderId string
-		sku string
-		itemName string
-		quantity int
-		price int32
-		notes string
+		OrderId string `json:"orderId"`
+		SKU string `json:"sku"`
+		ItemName string `json:"itemName"`
+		Quantity int `json:"quantity"`
+		Price int32 `json:"price"`
+		Notes string `json:"notes"`
 	}
 )
