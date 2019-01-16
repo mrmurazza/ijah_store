@@ -17,7 +17,7 @@ func InitDatabase() {
 	statement.Exec("SSI-D00791015-LL-BWH", "Zalekia Plain Casual Blouse (L,Broken White)", 154)
 
 	statement, _ = database.Prepare("CREATE TABLE IF NOT EXISTS restock_orders ( " +
-		"id integer auto increment, " +
+		"id integer primary key, " +
 		"invoice_id varchar(20) default '(Hilang)', " +
 		"quantity integer not null," +
 		"price biginteger not null, " +
@@ -27,14 +27,14 @@ func InitDatabase() {
 	statement.Exec()
 
 	statement, _ = database.Prepare("CREATE TABLE IF NOT EXISTS restock_receptions ( " +
-		"id integer auto increment, " +
+		"id integer primary key, " +
 		"restock_order_id integer, " +
 		"quantity integer not null," +
-		"created_at datetime default current_timestamp);")
+		"date_received datetime default current_timestamp);")
 	statement.Exec()
 
 	statement, _ = database.Prepare("CREATE TABLE IF NOT EXISTS purchase_orders ( " +
-		"id integer auto increment, " +
+		"id integer primary key, " +
 		"order_id varchar(20), " +
 		"quantity integer not null," +
 		"price biginteger not null, " +
