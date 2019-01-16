@@ -19,8 +19,8 @@ func main() {
 		api.GET("/stock-info", app.GetStockInfo)
 		api.GET("/restock-order-log", app.GetRestockOrderLog)
 		api.GET("/purchase-order-log", app.GetPurchaseOrderLog)
-		api.GET("/item-inventory/:format", app.GetItemInventoryReport)
-		api.DELETE("/sales/:format", app.GetSalesReport)
+		api.GET("/item-inventory", app.GetItemInventoryReport)
+		api.GET("/sales", app.GetSalesReport)
 	}
 
 	r.GET("/ping", func(c *gin.Context) {
