@@ -74,7 +74,13 @@ func CreatePurchaseOrder(c *gin.Context) {
 		return
 	}
 
-	itemMap := item.GetRequestedItemMap(req.Items)
+	// prep requested items data
+	requestedSkuList := make([]string, len(req.Items))
+	for i, itemDetail := range req.Items {
+		requestedSkuList[i] = itemDetail.SKU
+	}
+
+	itemMap := item.GetRequestedItemMap(requestedSkuList)
 	errorMsg := purchase.CheckAvailability(req.Items, itemMap)
 
 	if errorMsg != "" {

@@ -21,13 +21,7 @@ func UpdateItemStock(sku string, quantity int) {
 	item.UpdateStock()
 }
 
-func GetRequestedItemMap(itemDetails []request.ItemDetail) map[string]Item{
-	// prep requested items data
-	requestedSkuList := make([]string, len(itemDetails))
-	for i, itemDetail := range itemDetails {
-		requestedSkuList[i] = itemDetail.SKU
-	}
-
+func GetRequestedItemMap(requestedSkuList []string) map[string]Item{
 	// get requested item data and more prep
 	var itemMap = make(map[string]Item)
 	items := GetItems(requestedSkuList[:])
