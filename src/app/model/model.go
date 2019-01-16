@@ -1,8 +1,8 @@
 package model
 
 import (
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"database/sql"
+	"time"
 )
 
 type (
@@ -10,30 +10,30 @@ type (
 		sku string
 		name string
 		stock int
-		createdAt timestamp.Timestamp
+		createdAt time.Time
 	}
 
 	RestockOrder struct {
-		id int
-		invoiceId string
-		quantity int
-		price int32
-		sku string
-		status string
-		createdAt timestamp.Timestamp
+		Id int
+		InvoiceId string
+		Quantity int
+		Price int32
+		SKU string
+		Status string
+		CreatedAt time.Time
 	}
 
 	RestockReception struct {
-		id int
-		restockOrderId int
-		dateReceived timestamp.Timestamp
-		quantity int
+		Id int
+		RestockOrderId int
+		DateReceived time.Time
+		Quantity int
 	}
 
 	PurchaseOrder struct {
 		id int
 		orderId string
-		createdAt timestamp.Timestamp
+		createdAt time.Time
 		sku string
 		itemName string
 		quantity int
@@ -54,22 +54,41 @@ func (item Item) UpdateStock() {
 	statement.Exec(item.stock, item.sku)
 }
 
-func (order RestockOrder) Persist() {
+func (order RestockOrder) Persist() int {
 	database, _ := sql.Open("sqlite3", "ijah_store.db")
 	statement, _ := database.Prepare("INSERT INTO restock_orders (invoice_id, quantity, price, sku) VALUES (?, ?, ?, ?)")
-	statement.Exec(order.invoiceId, order.quantity, order.price, order.sku)
+	res,err := statement.Exec(order.InvoiceId, order.Quantity, order.Price, order.SKU)
+	if err != nil {
+		println("Exec err:", err.Error())
+	} else {
+		id, err := res.LastInsertId()
+		if err != nil {
+			println("Error:", err.Error())
+		}
+		return int(id)
+	}
+	return -1
 }
 
 func (order RestockOrder) UpdateStatus() {
 	database, _ := sql.Open("sqlite3", "ijah_store.db")
 	statement, _ := database.Prepare("UPDATE restock_orders set status = ? where invoice_id = ?")
-	statement.Exec(order.status, order.invoiceId)
+	statement.Exec(order.Status, order.InvoiceId)
+}
+
+func GetIdByInvoiceId(invoiceId string) int {
+	database, _ := sql.Open("sqlite3", "ijah_store.db")
+	rows, _ := database.Query("SELECT id FROM restock_orders where invoice_id = ?", invoiceId)
+	var id int
+	rows.Next()
+	rows.Scan(&id)
+	return id
 }
 
 func (order RestockReception) Persist() {
 	database, _ := sql.Open("sqlite3", "ijah_store.db")
 	statement, _ := database.Prepare("INSERT INTO restock_receptions (restock_order_id, quantity, date_received) VALUES (?, ?, ?)")
-	statement.Exec(order.restockOrderId, order.quantity, order.dateReceived)
+	statement.Exec(order.RestockOrderId, order.Quantity, order.DateReceived)
 }
 
 func (order PurchaseOrder) Persist() {
