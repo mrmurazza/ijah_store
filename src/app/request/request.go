@@ -1,9 +1,5 @@
 package request
 
-import (
-	"time"
-)
-
 type (
 	RestockOrderRequest struct {
 		SKU string `json:"sku"`
@@ -11,13 +7,13 @@ type (
 		InvoiceId string `json:"invoiceId"`
 		Price int32 `json:"price"`
 		Quantity int `json:"quantity"`
-		DateReceived time.Time `json:"dateReceived"`
+		DateReceived string `json:"dateReceived"`
 		QuantityReceived int `json:"quantityReceived"`
 	}
 
 	RestockReceiptRequest struct {
 		InvoiceId string `json:"invoiceId"`
-		DateReceived time.Time `json:"dateReceived"`
+		DateReceived string `json:"dateReceived"`
 		Quantity int `json:"quantity"`
 	}
 

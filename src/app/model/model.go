@@ -7,9 +7,9 @@ import (
 
 type (
 	Item struct {
-		sku string
-		name string
-		stock int
+		SKU string
+		Name string
+		Stock int
 		createdAt time.Time
 	}
 
@@ -54,10 +54,20 @@ func (item Item) UpdateStock() {
 	statement.Exec(item.stock, item.sku)
 }
 
+func (item Item) IsExist() bool {
+	database, _ := sql.Open("sqlite3", "ijah_store.db")
+	rows, _ := database.Query("SELECT count(*) FROM restock_orders where invoice_id = ?", item.sku)
+	var counter int
+	rows.Next()
+	rows.Scan(&counter)
+
+	return counter > 0
+}
+
 func (order RestockOrder) Persist() int {
 	database, _ := sql.Open("sqlite3", "ijah_store.db")
-	statement, _ := database.Prepare("INSERT INTO restock_orders (invoice_id, quantity, price, sku) VALUES (?, ?, ?, ?)")
-	res,err := statement.Exec(order.InvoiceId, order.Quantity, order.Price, order.SKU)
+	statement, _ := database.Prepare("INSERT INTO restock_orders (invoice_id, quantity, price, sku, status) VALUES (?, ?, ?, ?, ?)")
+	res,err := statement.Exec(order.InvoiceId, order.Quantity, order.Price, order.SKU, order.Status)
 	if err != nil {
 		println("Exec err:", err.Error())
 	} else {
@@ -72,23 +82,39 @@ func (order RestockOrder) Persist() int {
 
 func (order RestockOrder) UpdateStatus() {
 	database, _ := sql.Open("sqlite3", "ijah_store.db")
-	statement, _ := database.Prepare("UPDATE restock_orders set status = ? where invoice_id = ?")
-	statement.Exec(order.Status, order.InvoiceId)
+	statement, _ := database.Prepare("UPDATE restock_orders set status = ? where id = ?")
+	statement.Exec(order.Status, order.Id)
 }
 
-func GetIdByInvoiceId(invoiceId string) int {
+func GetByInvoiceId(invoiceId string) RestockOrder {
 	database, _ := sql.Open("sqlite3", "ijah_store.db")
-	rows, _ := database.Query("SELECT id FROM restock_orders where invoice_id = ?", invoiceId)
-	var id int
+	rows, _ := database.Query("SELECT id, status, quantity FROM restock_orders where invoice_id = ?", invoiceId)
+	var id, quantity int
+	var status string
 	rows.Next()
 	rows.Scan(&id)
-	return id
+	rows.Scan(&quantity)
+	rows.Scan(&status)
+	return RestockOrder{
+		Id: id,
+		Status: status,
+		Quantity: quantity,
+	}
 }
 
 func (order RestockReception) Persist() {
 	database, _ := sql.Open("sqlite3", "ijah_store.db")
 	statement, _ := database.Prepare("INSERT INTO restock_receptions (restock_order_id, quantity, date_received) VALUES (?, ?, ?)")
-	statement.Exec(order.RestockOrderId, order.Quantity, order.DateReceived)
+	statement.Exec(order.RestockOrderId, order.Quantity, order.DateReceived.Format(time.RFC3339))
+}
+
+func CountReceivedStock(restockOrderId int) int {
+	database, _ := sql.Open("sqlite3", "ijah_store.db")
+	rows, _ := database.Query("SELECT sum(quantity) FROM restock_receptions where restock_order_id = ?", restockOrderId)
+	var totalQuantity int
+	rows.Next()
+	rows.Scan(&totalQuantity)
+	return totalQuantity
 }
 
 func (order PurchaseOrder) Persist() {
