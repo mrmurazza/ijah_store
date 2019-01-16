@@ -38,15 +38,16 @@ func (item Item) IsExist() bool {
 }
 
 func GetItem(sku string) Item {
-	rows, _ := util.Database.Query("SELECT name, stock FROM items where sku = ?", sku)
+	row := util.Database.QueryRow("SELECT name, stock FROM items where sku = ?", sku)
 	var (
 		name string
 		stock int
 	)
-	rows.Next()
-	rows.Scan(&name)
-	rows.Scan(&stock)
-	defer rows.Close()
+
+	err := row.Scan(&name, &stock)
+	if err != nil {
+		println("Exec err:", err.Error())
+	}
 
 	return Item{
 		SKU: sku,
