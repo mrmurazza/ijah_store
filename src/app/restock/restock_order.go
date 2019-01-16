@@ -40,10 +40,14 @@ func (order RestockOrder) UpdateStatus() {
 }
 
 func GetByInvoiceId(invoiceId string) RestockOrder {
-	rows:= util.Database.QueryRow("SELECT id, status, quantity FROM restock_orders where invoice_id = ?", invoiceId)
-	var id, quantity int
-	var status string
-	err := rows.Scan(&id, &status, &quantity)
+	rows:= util.Database.QueryRow("SELECT id, status, quantity, sku, price FROM restock_orders where invoice_id = ?", invoiceId)
+	var (
+		id, quantity int
+		price int32
+		status, sku string
+	)
+
+	err := rows.Scan(&id, &status, &quantity, &sku, &price)
 	if err != nil {
 		println("Exec err:", err.Error())
 	}
@@ -52,6 +56,8 @@ func GetByInvoiceId(invoiceId string) RestockOrder {
 		Id: id,
 		Status: status,
 		Quantity: quantity,
+		Price: price,
+		SKU: sku,
 	}
 }
 
