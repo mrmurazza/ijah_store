@@ -95,6 +95,9 @@ func GetStockInfo(c *gin.Context) {
 func GetRestockOrderLog(c *gin.Context) {
 }
 func GetPurchaseOrderLog(c *gin.Context) {
+	orders := purchase.GetAllOrders()
+
+	c.JSON(http.StatusOK, orders)
 }
 func GetItemInventoryReport(c *gin.Context) {
 }
