@@ -28,3 +28,27 @@ func CountReceivedStock(restockOrderId int) int {
 
 	return totalQuantity
 }
+
+func GetAllReceptions() []RestockReception {
+	query := "SELECT restock_order_id, date_received, quantity FROM restock_receptions"
+	// converting list of string to args
+	rows, err := util.Database.Query(query)
+	defer rows.Close()
+
+	if err != nil {
+		println("Exec err:", err.Error())
+	}
+
+	var receptions []RestockReception
+	for rows.Next() {
+		reception := RestockReception{}
+
+		err = rows.Scan(&reception.RestockOrderId, &reception.DateReceived, &reception.Quantity)
+		if err != nil {
+			println("Exec err:", err.Error())
+		}
+
+		receptions = append(receptions, reception)
+	}
+	return receptions
+}

@@ -63,3 +63,27 @@ func GetByInvoiceId(invoiceId string) RestockOrder {
 	}
 }
 
+func GetAllOrders() []RestockOrder {
+	query := "SELECT id, sku, quantity, price, invoice_id FROM restock_orders"
+	// converting list of string to args
+	rows, err := util.Database.Query(query)
+	defer rows.Close()
+
+	if err != nil {
+		println("Exec err:", err.Error())
+	}
+
+	var orders []RestockOrder
+	for rows.Next() {
+		order := RestockOrder{}
+
+		err = rows.Scan(&order.Id, &order.SKU, &order.Quantity, &order.Price, &order.InvoiceId)
+		if err != nil {
+			println("Exec err:", err.Error())
+		}
+
+		orders = append(orders, order)
+	}
+	return orders
+}
+
