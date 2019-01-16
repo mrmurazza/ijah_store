@@ -2,7 +2,6 @@ package item
 
 import (
 	"time"
-	"fmt"
 	"app/util"
 	"strings"
 )
@@ -33,7 +32,6 @@ func (item Item) IsExist() bool {
 	rows.Scan(&counter)
 	defer rows.Close()
 
-	fmt.Printf("%d",counter)
 	return counter > 0
 }
 

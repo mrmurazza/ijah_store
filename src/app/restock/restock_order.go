@@ -16,7 +16,7 @@ type RestockOrder struct {
 }
 
 
-func (order RestockOrder) Persist() int {
+func (order *RestockOrder) Persist() int {
 	statement, _ := util.Database.Prepare("INSERT INTO restock_orders (invoice_id, quantity, price, sku, status) VALUES (?, ?, ?, ?, ?)")
 	res,err := statement.Exec(order.InvoiceId, order.Quantity, order.Price, order.SKU, order.Status)
 	defer statement.Close()
