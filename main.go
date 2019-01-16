@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"app/model"
 	"app"
 )
 
@@ -9,7 +10,7 @@ import (
 func main() {
 	r := gin.Default()
 
-	app.InitDatabase()
+	model.InitDatabase()
 
 	api := r.Group("/api/v1")
 	{

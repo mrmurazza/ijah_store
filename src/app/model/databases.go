@@ -1,4 +1,4 @@
-package app
+package model
 
 import (
 	"database/sql"
@@ -28,6 +28,7 @@ func InitDatabase() {
 
 	statement, _ = database.Prepare("CREATE TABLE IF NOT EXISTS restock_receptions ( " +
 		"id integer autoincrement, " +
+		"restock_order_id integer, " +
 		"quantity integer not null," +
 		"created_at datetime default current_timestamp);")
 	statement.Exec()
