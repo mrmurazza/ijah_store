@@ -19,7 +19,6 @@ type (
 
 	ItemDetail struct {
 		SKU string `json:"sku"`
-		ItemName string `json:"itemName"`
 		Quantity int `json:"quantity"`
 		Price int32 `json:"price"`
 	}
