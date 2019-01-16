@@ -6,7 +6,7 @@ func CreateItemIfNotAny(request request.RestockOrderRequest) {
 	item := Item{
 		SKU: request.SKU,
 		Name: request.ItemName,
-		Stock: request.QuantityReceived,
+		// stock will be updated separately
 	}
 
 	if !item.IsExist() {
