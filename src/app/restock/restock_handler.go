@@ -91,14 +91,14 @@ func HandleStatusUpdate(request request.RestockReceiptRequest, existingQuantity 
 func getReceiptMapAndTotalReceived(receptions []RestockReception) (map[int][]response.ReceiptDetail, map[int]int) {
 	receiptDetailMap := make(map[int][]response.ReceiptDetail)
 	receivedTotalMap := make(map[int]int)
+
 	for _,reception := range receptions {
-		list := receiptDetailMap[reception.RestockOrderId]
-		list = append(list, response.ReceiptDetail{
+		receiptDetailMap[reception.RestockOrderId] = append(receiptDetailMap[reception.RestockOrderId], response.ReceiptDetail{
 			ReceivedAt: reception.DateReceived.Format(time.RFC850),
 			Quantity: reception.Quantity,
 		})
-		total := receivedTotalMap[reception.RestockOrderId]
-		total += reception.Quantity
+
+		receivedTotalMap[reception.RestockOrderId] += reception.Quantity
 	}
 
 	return receiptDetailMap, receivedTotalMap
