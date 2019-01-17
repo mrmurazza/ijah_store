@@ -65,7 +65,6 @@ func convertStringListToInterface(list []string) []interface{} {
 
 func GetItems(skuList []string) []Item {
 	query := "SELECT sku, name, stock FROM items where sku in (?" + strings.Repeat(",?", len(skuList)-1) + ")"
-	// converting list of string to args
 	args := convertStringListToInterface(skuList)
 	rows, err := util.Database.Query(query, args...)
 	defer rows.Close()
@@ -90,7 +89,6 @@ func GetItems(skuList []string) []Item {
 
 func GetAllItems() []Item {
 	query := "SELECT sku, name, stock FROM items"
-	// converting list of string to args
 	rows, err := util.Database.Query(query)
 	defer rows.Close()
 

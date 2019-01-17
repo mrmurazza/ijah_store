@@ -23,8 +23,8 @@ func UpdateItemStock(sku string, quantity int) {
 	item.UpdateStock()
 }
 
+// Given a list of SKU, this will return a map containing SKU -> its appropriate Item struct
 func GetRequestedItemMap(requestedSkuList []string) map[string]Item{
-	// get requested item data and more prep
 	var itemMap = make(map[string]Item)
 	items := GetItems(requestedSkuList[:])
 	for _, product := range items {
