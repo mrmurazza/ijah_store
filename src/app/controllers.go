@@ -9,6 +9,9 @@ import (
 	"app/util"
 	"time"
 	"app/purchase"
+	"os"
+	"encoding/csv"
+	"strconv"
 )
 
 func CreateRestockOrder(c *gin.Context) {
@@ -112,6 +115,65 @@ func GetPurchaseOrderLog(c *gin.Context) {
 }
 
 func GetItemInventoryReport(c *gin.Context) {
+	//prep data
+	items := item.GetAllItems()
+	stockInfoMap := item.GetItemStockInfoMap()
+
+	var (
+		data [][]string
+		totalStock int
+		totalValue int64
+	)
+
+	for _, it := range items {
+		stockInfo := stockInfoMap[it.SKU]
+		currValue := int64(stockInfo.AVGPrice()) * int64(it.Stock)
+		row := []string{
+			it.SKU,
+			it.Name,
+			strconv.Itoa(it.Stock),
+			strconv.FormatInt(stockInfo.AVGPrice(), 10),
+			strconv.FormatInt(currValue, 10),
+		}
+
+		data = append(data, row)
+		totalStock += it.Stock
+		totalValue += currValue
+	}
+
+	file, err := os.Create("inventory_report_"+time.Now().Format("02_01_06")+".csv")
+	defer file.Close()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	err = writer.Write([]string{"LAPORAN NILAI BARANG"})
+	err = writer.Write([]string{})
+	err = writer.Write([]string{"Tanggal Cetak", time.Now().Format("02 January 2006")})
+	err = writer.Write([]string{"Jumlah SKU", strconv.Itoa(len(items))})
+	err = writer.Write([]string{"Jumlah Total Barang", strconv.Itoa(totalStock)})
+	err = writer.Write([]string{"Total Nilai", strconv.FormatInt(totalValue, 10)})
+	err = writer.Write([]string{})
+	err = writer.Write([]string{"SKU", "Nama Item", "Jumlah", "Rata-Rata Harga Beli", "Total"})
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	for _, value := range data {
+		err = writer.Write(value)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message" : "sukses"})
 }
 
 func GetSalesReport(c *gin.Context) {

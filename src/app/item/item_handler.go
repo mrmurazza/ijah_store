@@ -1,6 +1,18 @@
 package item
 
-import "app/request"
+import (
+	"app/request"
+	"app/restock"
+)
+
+type StockInfo struct {
+	TotalQuantity       int
+	TotalPurchasedPrice int32
+}
+
+func (stockInfo StockInfo) AVGPrice() int64 {
+	return int64(stockInfo.TotalPurchasedPrice) / int64(stockInfo.TotalQuantity)
+}
 
 func CreateItemIfNotAny(request request.RestockOrderRequest) {
 	item := Item{
@@ -29,4 +41,18 @@ func GetRequestedItemMap(requestedSkuList []string) map[string]Item{
 		itemMap[product.SKU] = product
 	}
 	return itemMap
+}
+
+func GetItemStockInfoMap() map[string]StockInfo {
+	restockLogs := restock.GetAllRestockLog()
+
+	stockInfoMap := make(map[string]StockInfo)
+	for _, log := range restockLogs {
+		stockInfo := stockInfoMap[log.SKU]
+		stockInfo.TotalPurchasedPrice += log.TotalPrice
+		stockInfo.TotalQuantity += log.Quantity
+		stockInfoMap[log.SKU] = stockInfo
+	}
+
+	return stockInfoMap
 }

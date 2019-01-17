@@ -9,6 +9,7 @@ type (
 	RestockOrderResponse struct {
 		SKU string `json:"sku"`
 		ItemName string `json:"itemName"`
+		Status string `json:"status"`
 		InvoiceId string `json:"invoiceId"`
 		Price int32 `json:"price"`
 		Quantity int `json:"quantity"`

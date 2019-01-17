@@ -126,6 +126,7 @@ func GetAllRestockLog() []response.RestockOrderResponse {
 			TotalPrice:    order.Price * int32(order.Quantity),
 			ReceivedQuantityTotal: receivedStockMap[order.Id],
 			ReceiptDetail: receiptDetailMap[order.Id],
+			Status: order.Status,
 		})
 	}
 
