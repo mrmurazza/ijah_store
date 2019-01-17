@@ -43,3 +43,21 @@ Basically, this project is separated into several components:
 2. Handler : responsible on handling the main core of the business logic. (ex: `item_handler.go, restock_handler.go, & purchase.handler)`
 3. Model : responsible on containing the struct and queries. (ex: `item.go, restock_resception.go, etc`)
 
+
+# Notes Regarding the Assessment:
+
+For this "Toko Ijah" Inventory App, based on the provided spreadsheet, here are several points that 
+I could point out as a base assumption on developing this app:
+
+1. There are 4 entities: Item, Restock Order, Restock Reception, Purchase Order
+2. Item is created on when a restock of a new item is ordered.
+3. When a restock order is created, it will not immediately add an item's stock unless someone has received 
+it (by receive, it means someone has to input a Restock Reception)
+4. A restock order has Invoice Id and it has to be unique for each order. While having Invoice Id is not mandatory, 
+pending reception is forbidden when invoice id is missing. It means that when invoice id is missing, 
+all of the item has to be received by the time the order is created or is input.
+5. A purchase order has Order Id, just as before, it is not mandatory. However, in one order id, 
+there could consist of more than 2 items. That is why the POST API of purchase order creation could 
+accept a list of item purchase details. 
+6. When a purchase order is posted and passed the validation, it will be created and immediately reduced 
+an item's stock
