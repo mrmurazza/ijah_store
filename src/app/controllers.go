@@ -117,7 +117,7 @@ func GetPurchaseOrderLog(c *gin.Context) {
 func GetItemInventoryReport(c *gin.Context) {
 	//prep data
 	items := item.GetAllItems()
-	stockInfoMap := item.GetItemStockInfoMap()
+	stockInfoMap := restock.GetItemStockInfoMap()
 
 	var (
 		data [][]string
@@ -177,4 +177,69 @@ func GetItemInventoryReport(c *gin.Context) {
 }
 
 func GetSalesReport(c *gin.Context) {
+	purchasedOrders := purchase.GetAllOrders()
+	itemStockInfoMap := restock.GetItemStockInfoMap()
+
+	var (
+		omzet, grossValue int64
+		totalSold int
+		data [][]string
+	)
+
+	for _, order := range purchasedOrders {
+		stockInfo := itemStockInfoMap[order.SKU]
+		totalPrice := int64(order.Price) * int64(order.Quantity)
+		value := (int64(order.Price) - stockInfo.AVGPrice()) * int64(order.Quantity)
+		row := []string{
+			order.OrderId,
+			order.CreatedAt.Format(time.RFC822),
+			order.SKU,
+			order.ItemName,
+			strconv.Itoa(order.Quantity),
+			strconv.FormatInt(int64(order.Price), 10),
+			strconv.FormatInt(totalPrice, 10),
+			strconv.FormatInt(stockInfo.AVGPrice(), 10),
+			strconv.FormatInt(value, 10),
+		}
+
+		data = append(data, row)
+		omzet += totalPrice
+		grossValue += value
+		totalSold += order.Quantity
+	}
+
+	file, err := os.Create("sales_report_"+time.Now().Format("02_01_06")+".csv")
+	defer file.Close()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	err = writer.Write([]string{"LAPORAN PENJUALAN"})
+	err = writer.Write([]string{})
+	err = writer.Write([]string{"Tanggal Cetak", time.Now().Format("02 January 2006")})
+	err = writer.Write([]string{"Total Omzet", strconv.FormatInt(omzet, 10)})
+	err = writer.Write([]string{"Total Laba Kotor", strconv.FormatInt(grossValue, 10)})
+	err = writer.Write([]string{"Total Penjualan", strconv.Itoa(len(purchasedOrders))})
+	err = writer.Write([]string{"Total Barang Terjual", strconv.Itoa(totalSold)})
+	err = writer.Write([]string{})
+	err = writer.Write([]string{"ID Pesanan", "Waktu", "SKU", "Nama Barang", "Jumlah", "Harga Jual", "Total", "Harga Beli", "Laba"})
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	for _, value := range data {
+		err = writer.Write(value)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message" : "sukses"})
 }

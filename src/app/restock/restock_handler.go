@@ -7,6 +7,15 @@ import (
 	"app/response"
 )
 
+type StockInfo struct {
+	TotalQuantity       int
+	TotalPurchasedPrice int32
+}
+
+func (stockInfo StockInfo) AVGPrice() int64 {
+	return int64(stockInfo.TotalPurchasedPrice) / int64(stockInfo.TotalQuantity)
+}
+
 func validateRestockReq(req request.RestockOrderRequest) string {
 	if req.SKU == "" || req.Price == 0 || req.Quantity == 0 || req.ItemName == "" {
 		return "data input wajib ada yang kosong"
@@ -131,4 +140,18 @@ func GetAllRestockLog() []response.RestockOrderResponse {
 	}
 
 	return responses
+}
+
+func GetItemStockInfoMap() map[string]StockInfo {
+	restockLogs := GetAllRestockLog()
+
+	stockInfoMap := make(map[string]StockInfo)
+	for _, log := range restockLogs {
+		stockInfo := stockInfoMap[log.SKU]
+		stockInfo.TotalPurchasedPrice += log.TotalPrice
+		stockInfo.TotalQuantity += log.Quantity
+		stockInfoMap[log.SKU] = stockInfo
+	}
+
+	return stockInfoMap
 }
