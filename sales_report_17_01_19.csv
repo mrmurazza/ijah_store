@@ -1,0 +1,12 @@
+LAPORAN PENJUALAN
+
+Tanggal Cetak,17 January 2019
+Total Omzet,67000
+Total Laba Kotor,57000
+Total Penjualan,3
+Total Barang Terjual,5
+
+ID Pesanan,Waktu,SKU,Nama Barang,Jumlah,Harga Jual,Total,Harga Beli,Laba
+P001,16 Jan 19 15:34 UTC,ABC-1,BAJU BAJU 1,1,2000,2000,2000,0
+P002,16 Jan 19 15:35 UTC,ABC-1,BAJU BAJU 1,1,5000,5000,2000,3000
+P002,16 Jan 19 15:35 UTC,ABC-2,CELANA 2,3,20000,60000,2000,54000
