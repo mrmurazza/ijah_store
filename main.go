@@ -2,25 +2,25 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"app/util"
-	"app"
+	"ijah-store/handler"
+	"ijah-store/pkg"
 )
 
 func main() {
 	r := gin.Default()
 
-	util.InitDatabase()
+	pkg.InitDatabase()
 
-	api := r.Group("/api/v1")
+	v1 := r.Group("/api/v1")
 	{
-		api.POST("/order-restock", app.CreateRestockOrder)
-		api.POST("/receive-restock", app.ReceiveRestock)
-		api.POST("/purchase", app.CreatePurchaseOrder)
-		api.GET("/stock-info", app.GetStockInfo)
-		api.GET("/restock-order-log", app.GetRestockOrderLog)
-		api.GET("/purchase-order-log", app.GetPurchaseOrderLog)
-		api.GET("/item-inventory", app.GetItemInventoryReport)
-		api.GET("/sales", app.GetSalesReport)
+		v1.POST("/order-restock", handler.CreateRestockOrder)
+		v1.POST("/receive-restock", handler.ReceiveRestock)
+		v1.POST("/purchase", handler.CreatePurchaseOrder)
+		v1.GET("/stock-info", handler.GetStockInfo)
+		v1.GET("/restock-order-log", handler.GetRestockOrderLog)
+		v1.GET("/purchase-order-log", handler.GetPurchaseOrderLog)
+		v1.GET("/item-inventory", handler.GetItemInventoryReport)
+		v1.GET("/sales", handler.GetSalesReport)
 	}
 
 	r.GET("/ping", func(c *gin.Context) {

@@ -2,8 +2,8 @@ package purchase
 
 import (
 	"database/sql"
+	"ijah-store/pkg"
 	"time"
-	"app/util"
 )
 
 type PurchaseOrder struct {
@@ -27,7 +27,7 @@ func (order PurchaseOrder) Persist() {
 func GetAllOrders() []PurchaseOrder {
 	query := "SELECT created_at, sku, item_name, quantity, price, order_id, notes FROM purchase_orders"
 	// converting list of string to args
-	rows, err := util.Database.Query(query)
+	rows, err := pkg.Database.Query(query)
 	defer rows.Close()
 
 	if err != nil {

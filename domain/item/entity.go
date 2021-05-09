@@ -1,9 +1,9 @@
 package item
 
 import (
-	"time"
-	"app/util"
+	"ijah-store/pkg"
 	"strings"
+	"time"
 )
 
 type Item struct {
@@ -14,19 +14,19 @@ type Item struct {
 }
 
 func (item Item) Persist() {
-	statement, _ := util.Database.Prepare("INSERT INTO items (sku, name, stock) VALUES (?, ?, ?)")
+	statement, _ := pkg.Database.Prepare("INSERT INTO items (sku, name, stock) VALUES (?, ?, ?)")
 	statement.Exec(item.SKU, item.Name, item.Stock)
 	statement.Close()
 }
 
 func (item Item) UpdateStock() {
-	statement, _ := util.Database.Prepare("UPDATE items set stock = ? where sku = ?")
+	statement, _ := pkg.Database.Prepare("UPDATE items set stock = ? where sku = ?")
 	statement.Exec(item.Stock, item.SKU)
 	statement.Close()
 }
 
 func (item Item) IsExist() bool {
-	rows, _ := util.Database.Query("SELECT count(*) FROM restock_orders where invoice_id = ?", item.SKU)
+	rows, _ := pkg.Database.Query("SELECT count(*) FROM restock_orders where invoice_id = ?", item.SKU)
 	var counter int
 	rows.Next()
 	rows.Scan(&counter)
@@ -36,7 +36,7 @@ func (item Item) IsExist() bool {
 }
 
 func GetItem(sku string) Item {
-	row := util.Database.QueryRow("SELECT name, stock FROM items where sku = ?", sku)
+	row := pkg.Database.QueryRow("SELECT name, stock FROM items where sku = ?", sku)
 	var (
 		name string
 		stock int
@@ -66,7 +66,7 @@ func convertStringListToInterface(list []string) []interface{} {
 func GetItems(skuList []string) []Item {
 	query := "SELECT sku, name, stock FROM items where sku in (?" + strings.Repeat(",?", len(skuList)-1) + ")"
 	args := convertStringListToInterface(skuList)
-	rows, err := util.Database.Query(query, args...)
+	rows, err := pkg.Database.Query(query, args...)
 	defer rows.Close()
 
 	if err != nil {
@@ -89,7 +89,7 @@ func GetItems(skuList []string) []Item {
 
 func GetAllItems() []Item {
 	query := "SELECT sku, name, stock FROM items"
-	rows, err := util.Database.Query(query)
+	rows, err := pkg.Database.Query(query)
 	defer rows.Close()
 
 	if err != nil {

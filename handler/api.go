@@ -1,26 +1,26 @@
-package app
+package handler
 
 import (
-	"github.com/gin-gonic/gin"
-	"app/request"
-	"net/http"
-	"app/item"
-	"app/restock"
-	"app/util"
-	"time"
-	"app/purchase"
-	"os"
 	"encoding/csv"
+	"github.com/gin-gonic/gin"
+	"ijah-store/domain/item"
+	"ijah-store/domain/purchase"
+	"ijah-store/domain/request"
+	"ijah-store/domain/restock"
+	"ijah-store/util"
+	"net/http"
+	"os"
 	"strconv"
+	"time"
 )
 
 func CreateRestockOrder(c *gin.Context) {
-	var request request.RestockOrderRequest
-	err := c.ShouldBindJSON(&request)
+	var req request.RestockOrderRequest
+	err := c.ShouldBindJSON(&req)
 
 	var dateReceived time.Time
-	if request.DateReceived != "" {
-		dateReceived, err = util.ParseDateFromDefault(request.DateReceived)
+	if req.DateReceived != "" {
+		dateReceived, err = util.ParseDateFromDefault(req.DateReceived)
 	}
 
 	if err != nil {
@@ -28,15 +28,15 @@ func CreateRestockOrder(c *gin.Context) {
 		return
 	}
 
-	restockOrder, errorMsg := restock.GenerateRestockOrder(request)
+	restockOrder, errorMsg := restock.GenerateRestockOrder(req)
 	if errorMsg != "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": errorMsg})
 		return
 	}
 
 	restockOrder.Persist()
-	item.CreateItemIfNotAny(request)
-	restock.SaveRestockReception(restockOrder, dateReceived, request.QuantityReceived)
+	item.CreateItemIfNotAny(req)
+	restock.SaveRestockReception(restockOrder, dateReceived, req.QuantityReceived)
 
 	c.JSON(http.StatusOK, gin.H{"message" : "sukses"})
 }

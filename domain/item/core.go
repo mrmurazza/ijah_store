@@ -1,7 +1,7 @@
 package item
 
 import (
-	"app/request"
+	"ijah-store/domain/request"
 )
 
 func CreateItemIfNotAny(request request.RestockOrderRequest) {
@@ -23,7 +23,7 @@ func UpdateItemStock(sku string, quantity int) {
 	item.UpdateStock()
 }
 
-// Given a list of SKU, this will return a map containing SKU -> its appropriate Item struct
+// Given a list of SKU, this will return a map containing SKU -> its ijah-store/domainropriate Item struct
 func GetRequestedItemMap(requestedSkuList []string) map[string]Item{
 	var itemMap = make(map[string]Item)
 	items := GetItems(requestedSkuList[:])

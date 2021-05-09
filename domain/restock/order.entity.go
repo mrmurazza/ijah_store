@@ -1,11 +1,11 @@
 package restock
 
 import (
+	"ijah-store/pkg"
 	"time"
-	"app/util"
 )
 
-type RestockOrder struct {
+type Order struct {
 	Id int
 	InvoiceId string
 	Quantity int
@@ -16,9 +16,9 @@ type RestockOrder struct {
 }
 
 
-func (order *RestockOrder) Persist() int {
-	statement, _ := util.Database.Prepare("INSERT INTO restock_orders (invoice_id, quantity, price, sku, status) VALUES (?, ?, ?, ?, ?)")
-	res,err := statement.Exec(order.InvoiceId, order.Quantity, order.Price, order.SKU, order.Status)
+func (o *Order) Persist() int {
+	statement, _ := pkg.Database.Prepare("INSERT INTO restock_orders (invoice_id, quantity, price, sku, status) VALUES (?, ?, ?, ?, ?)")
+	res,err := statement.Exec(o.InvoiceId, o.Quantity, o.Price, o.SKU, o.Status)
 	defer statement.Close()
 
 	if err != nil {
@@ -29,20 +29,20 @@ func (order *RestockOrder) Persist() int {
 			println("Error:", err.Error())
 		}
 
-		order.Id = int(id)
+		o.Id = int(id)
 		return int(id)
 	}
 	return -1
 }
 
-func (order RestockOrder) UpdateStatus() {
-	statement, _ := util.Database.Prepare("UPDATE restock_orders set status = ? where id = ?")
-	statement.Exec(order.Status, order.Id)
+func (o Order) UpdateStatus() {
+	statement, _ := pkg.Database.Prepare("UPDATE restock_orders set status = ? where id = ?")
+	statement.Exec(o.Status, o.Id)
 	statement.Close()
 }
 
-func GetByInvoiceId(invoiceId string) RestockOrder {
-	rows:= util.Database.QueryRow("SELECT id, status, quantity, sku, price FROM restock_orders where invoice_id = ?", invoiceId)
+func GetByInvoiceId(invoiceId string) Order {
+	rows:= pkg.Database.QueryRow("SELECT id, status, quantity, sku, price FROM restock_orders where invoice_id = ?", invoiceId)
 	var (
 		id, quantity int
 		price int32
@@ -54,7 +54,7 @@ func GetByInvoiceId(invoiceId string) RestockOrder {
 		println("Exec err:", err.Error())
 	}
 
-	return RestockOrder{
+	return Order{
 		Id: id,
 		Status: status,
 		Quantity: quantity,
@@ -63,19 +63,19 @@ func GetByInvoiceId(invoiceId string) RestockOrder {
 	}
 }
 
-func GetAllOrders() []RestockOrder {
+func GetAllOrders() []Order {
 	query := "SELECT id, sku, quantity, price, invoice_id FROM restock_orders"
 	// converting list of string to args
-	rows, err := util.Database.Query(query)
+	rows, err := pkg.Database.Query(query)
 	defer rows.Close()
 
 	if err != nil {
 		println("Exec err:", err.Error())
 	}
 
-	var orders []RestockOrder
+	var orders []Order
 	for rows.Next() {
-		order := RestockOrder{}
+		order := Order{}
 
 		err = rows.Scan(&order.Id, &order.SKU, &order.Quantity, &order.Price, &order.InvoiceId)
 		if err != nil {

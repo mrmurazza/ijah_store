@@ -1,10 +1,10 @@
 package restock
 
 import (
-	"app/request"
+	"ijah-store/domain/item"
+	"ijah-store/domain/request"
+	"ijah-store/domain/response"
 	"time"
-	"app/item"
-	"app/response"
 )
 
 type StockInfo struct {
@@ -28,11 +28,11 @@ func validateRestockReq(req request.RestockOrderRequest) string {
 	return ""
 }
 
-func GenerateRestockOrder(req request.RestockOrderRequest) (RestockOrder, string) {
+func GenerateRestockOrder(req request.RestockOrderRequest) (Order, string) {
 	errorMsg := validateRestockReq(req)
 
 	if errorMsg != "" {
-		return RestockOrder{}, errorMsg
+		return Order{}, errorMsg
 	}
 
 	orderStatus := "pending"
@@ -44,7 +44,7 @@ func GenerateRestockOrder(req request.RestockOrderRequest) (RestockOrder, string
 		req.InvoiceId = "(Hilang)"
 	}
 
-	return RestockOrder{
+	return Order{
 		InvoiceId: req.InvoiceId,
 		Quantity:  req.Quantity,
 		Price:     req.Price,
@@ -53,12 +53,12 @@ func GenerateRestockOrder(req request.RestockOrderRequest) (RestockOrder, string
 	}, ""
 }
 
-func SaveRestockReception(restockOrder RestockOrder, dateReceived time.Time, quantity int) {
+func SaveRestockReception(restockOrder Order, dateReceived time.Time, quantity int) {
 	if quantity == 0 {
 		return
 	}
 
-	restockReception := RestockReception{
+	restockReception := Reception{
 		RestockOrderId: restockOrder.Id,
 		DateReceived:   dateReceived,
 		Quantity:       quantity,
@@ -68,7 +68,7 @@ func SaveRestockReception(restockOrder RestockOrder, dateReceived time.Time, qua
 	item.UpdateItemStock(restockOrder.SKU, quantity)
 }
 
-func ValidateRequest(request request.RestockReceiptRequest, restockOrder RestockOrder, totalQuantity int) string {
+func ValidateRequest(request request.RestockReceiptRequest, restockOrder Order, totalQuantity int) string {
 	var errorMsg string
 
 	if request.Quantity == 0 || request.DateReceived == "" || request.InvoiceId == "" {
@@ -90,14 +90,14 @@ func ValidateRequest(request request.RestockReceiptRequest, restockOrder Restock
 	return errorMsg
 }
 
-func HandleStatusUpdate(request request.RestockReceiptRequest, existingQuantity int, order RestockOrder){
+func HandleStatusUpdate(request request.RestockReceiptRequest, existingQuantity int, order Order){
 	if request.Quantity + existingQuantity == order.Quantity {
 		order.Status = "finish"
 		order.UpdateStatus()
 	}
 }
 
-func getReceiptMapAndTotalReceived(receptions []RestockReception) (map[int][]response.ReceiptDetail, map[int]int) {
+func getReceiptMapAndTotalReceived(receptions []Reception) (map[int][]response.ReceiptDetail, map[int]int) {
 	receiptDetailMap := make(map[int][]response.ReceiptDetail)
 	receivedTotalMap := make(map[int]int)
 

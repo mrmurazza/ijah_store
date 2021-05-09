@@ -1,8 +1,8 @@
 package purchase
 
 import (
-	"app/item"
-	"app/request"
+	"ijah-store/domain/item"
+	"ijah-store/domain/request"
 )
 
 func CheckAvailability(itemDetails []request.ItemDetail, itemMap map[string]item.Item) string {
