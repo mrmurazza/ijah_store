@@ -1,11 +1,23 @@
-package purchase
+package impl
 
 import (
 	"ijah-store/domain/item"
+	"ijah-store/domain/purchase"
 	"ijah-store/domain/request"
 )
 
-func CheckAvailability(itemDetails []request.ItemDetail, itemMap map[string]item.Item) string {
+type service struct {
+	repo purchase.Repository
+	itemSvc item.Service
+}
+
+func NewService(repo purchase.Repository) purchase.Service {
+	return &service{
+		repo: repo,
+	}
+}
+
+func (s *service) CheckAvailability(itemDetails []request.ItemDetail, itemMap map[string]*item.Item) string {
 	var errorMsg string
 	for _, itemDetail := range itemDetails {
 		product := itemMap[itemDetail.SKU]
@@ -24,10 +36,10 @@ func CheckAvailability(itemDetails []request.ItemDetail, itemMap map[string]item
 }
 
 // save purchase order and reduce stock
-func HandlePurchase(req request.PurchaseOrderRequest, itemMap map[string]item.Item) {
+func (s *service) HandlePurchase(req request.PurchaseOrderRequest, itemMap map[string]*item.Item) {
 	for _, itemDetail := range req.Items {
 		product := itemMap[itemDetail.SKU]
-		purchaseOrder := PurchaseOrder{
+		purchaseOrder := purchase.Order{
 			OrderId: req.OrderId,
 			SKU: product.SKU,
 			Quantity: itemDetail.Quantity,
@@ -35,9 +47,13 @@ func HandlePurchase(req request.PurchaseOrderRequest, itemMap map[string]item.It
 			Price: itemDetail.Price,
 			Notes: req.Notes,
 		}
-		purchaseOrder.Persist()
+		s.repo.Persist(&purchaseOrder)
 
 		product.Stock -= itemDetail.Quantity
-		product.UpdateStock()
+		s.itemSvc.UpdateItemStock(product.SKU, product.Stock)
 	}
+}
+
+func (s *service) GetAllOrders() []purchase.Order {
+	return s.repo.GetAllOrders()
 }

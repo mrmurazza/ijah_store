@@ -14,7 +14,21 @@ import (
 	"time"
 )
 
-func CreateRestockOrder(c *gin.Context) {
+type ApiHandler struct {
+	itemSvc item.Service
+	purchaseSvc purchase.Service
+	restockSvc restock.Service
+}
+
+func NewApiHandler(itemSvc item.Service, purchaseSvc purchase.Service, restockSvc restock.Service) *ApiHandler {
+	return &ApiHandler{
+		itemSvc: itemSvc,
+		purchaseSvc: purchaseSvc,
+		restockSvc: restockSvc,
+	}
+}
+
+func (h *ApiHandler) CreateRestockOrder(c *gin.Context) {
 	var req request.RestockOrderRequest
 	err := c.ShouldBindJSON(&req)
 
@@ -28,20 +42,19 @@ func CreateRestockOrder(c *gin.Context) {
 		return
 	}
 
-	restockOrder, errorMsg := restock.GenerateRestockOrder(req)
+	restockOrder, errorMsg := h.restockSvc.SaveRestockOrder(req)
 	if errorMsg != "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": errorMsg})
 		return
 	}
 
-	restockOrder.Persist()
-	item.CreateItemIfNotAny(req)
-	restock.SaveRestockReception(restockOrder, dateReceived, req.QuantityReceived)
+	h.itemSvc.CreateItemIfNotAny(req)
+	h.restockSvc.SaveRestockReception(restockOrder, dateReceived, req.QuantityReceived)
 
 	c.JSON(http.StatusOK, gin.H{"message" : "sukses"})
 }
 
-func ReceiveRestock(c *gin.Context) {
+func (h *ApiHandler) ReceiveRestock(c *gin.Context) {
 	var request request.RestockReceiptRequest
 	c.BindJSON(&request)
 	dateReceived, err := util.ParseDateFromDefault(request.DateReceived)
@@ -54,23 +67,16 @@ func ReceiveRestock(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "kwitansi harus ada"})
 		return
 	}
-
-	restockOrder := restock.GetByInvoiceId(request.InvoiceId)
-	totalReceivedQuantity := restock.CountReceivedStock(restockOrder.Id)
-
-	errorMsg := restock.ValidateRequest(request, restockOrder, totalReceivedQuantity)
-	if errorMsg != "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": errorMsg})
-		return
+	if request.Quantity == 0 || request.DateReceived == "" || request.InvoiceId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "input ada yang kosong, tolong cek kembali"})
 	}
 
-	restock.SaveRestockReception(restockOrder, dateReceived, request.Quantity)
-	restock.HandleStatusUpdate(request, totalReceivedQuantity, restockOrder)
+	h.restockSvc.ReceiveRestock(request.InvoiceId, request.Quantity, dateReceived)
 
 	c.JSON(http.StatusOK, gin.H{"message" : "sukses"})
 }
 
-func CreatePurchaseOrder(c *gin.Context) {
+func (h *ApiHandler) CreatePurchaseOrder(c *gin.Context) {
 	var req request.PurchaseOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -83,41 +89,41 @@ func CreatePurchaseOrder(c *gin.Context) {
 		requestedSkuList[i] = itemDetail.SKU
 	}
 
-	itemMap := item.GetRequestedItemMap(requestedSkuList)
-	errorMsg := purchase.CheckAvailability(req.Items, itemMap)
+	itemMap := h.itemSvc.GetRequestedItemMap(requestedSkuList)
+	errorMsg := h.purchaseSvc.CheckAvailability(req.Items, itemMap)
 
 	if errorMsg != "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": errorMsg})
 		return
 	}
 
-	purchase.HandlePurchase(req, itemMap)
+	h.purchaseSvc.HandlePurchase(req, itemMap)
 
 	c.JSON(http.StatusOK, gin.H{"message" : "sukses"})
 }
 
-func GetStockInfo(c *gin.Context) {
-	items := item.GetAllItems()
+func (h *ApiHandler) GetStockInfo(c *gin.Context) {
+	items := h.itemSvc.GetAllItems()
 
 	c.JSON(http.StatusOK, items)
 }
 
-func GetRestockOrderLog(c *gin.Context) {
-	restockLogData := restock.GetAllRestockLog()
+func (h *ApiHandler) GetRestockOrderLog(c *gin.Context) {
+	restockLogData := h.restockSvc.GetAllRestockLog()
 
 	c.JSON(http.StatusOK, restockLogData)
 }
 
-func GetPurchaseOrderLog(c *gin.Context) {
-	orders := purchase.GetAllOrders()
+func (h *ApiHandler) GetPurchaseOrderLog(c *gin.Context) {
+	orders := h.purchaseSvc.GetAllOrders()
 
 	c.JSON(http.StatusOK, orders)
 }
 
-func GetItemInventoryReport(c *gin.Context) {
+func (h *ApiHandler) GetItemInventoryReport(c *gin.Context) {
 	//prep data
-	items := item.GetAllItems()
-	stockInfoMap := restock.GetItemStockInfoMap()
+	items := h.itemSvc.GetAllItems()
+	stockInfoMap := h.restockSvc.GetItemStockInfoMap()
 
 	var (
 		data [][]string
@@ -176,9 +182,9 @@ func GetItemInventoryReport(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message" : "sukses"})
 }
 
-func GetSalesReport(c *gin.Context) {
-	purchasedOrders := purchase.GetAllOrders()
-	itemStockInfoMap := restock.GetItemStockInfoMap()
+func (h *ApiHandler) GetSalesReport(c *gin.Context) {
+	purchasedOrders := h.purchaseSvc.GetAllOrders()
+	itemStockInfoMap := h.restockSvc.GetItemStockInfoMap()
 
 	var (
 		omzet, grossValue int64
